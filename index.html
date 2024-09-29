@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字经济行业代码查询</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .query-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        select, button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .result p {
+            margin: 0;
+            padding: 10px 0;
+            color: #555;
+        }
+        .tree {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        .tree li {
+            margin-left: 20px;
+            cursor: pointer;
+            position: relative;
+        }
+        .tree li ul {
+            display: none;
+        }
+        .tree li.open ul {
+            display: block;
+        }
+        .tree li:before {
+            content: "+";
+            position: absolute;
+            left: -15px;
+            top: 0;
+            cursor: pointer;
+        }
+        .tree li.open:before {
+            content: "-";
+        }
+        #searchInput {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .reset-btn {
+            margin-top: 10px;
+            background-color: #ff6666;
+        }
+        .reset-btn:hover {
+            background-color: #ff4d4d;
+        }
+        .info-icon {
+            color: #007bff; /* 修改为您喜欢的颜色 */
+            margin-left: 10px;
+            cursor: pointer;
+        }
+          /* 添加公司 logo 的样式 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+        .logo {
+            max-width: 500px;
+            /* 您可以根据需要调整logo大小 */
+        }
+        .info-icon:hover {
+            color: #0056b3; /* 悬停时颜色变化 */
+    }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数字经济行业代码查询</h1>
+         <!-- 在这里添加公司 logo -->
+        <img src="img/微信图片_20240929201410.png" alt="江苏博和利" class="logo">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+        <input type="text" id="searchInput" placeholder="搜索分类代码或名称..." onkeyup="filterTree()" />
+        <button class="reset-btn" onclick="resetSearch()">重置搜索</button>
+
+        <div class="query-section">
+            <label for="largeCategory">选择大类</label>
+            <select id="largeCategory" onchange="populateMediumCategory()">
+                <option value="">请选择大类</option>
+            </select>
+
+            <label for="mediumCategory">选择中类</label>
+            <select id="mediumCategory" onchange="populateSmallCategory()">
+                <option value="">请选择中类</option>
+            </select>
+
+            <label for="smallCategory">选择小类</label>
+            <select id="smallCategory">
+                <option value="">请选择小类</option>
+            </select>
+
+            <button onclick="searchIndustry()">查询</button>
+        </div>
+
+        <div class="result" id="result">
+            <!-- Query results will be displayed here -->
+        </div>
+
+        <ul class="tree" id="industryTree">
+            <!-- Industry tree will be dynamically populated -->
+        </ul>
+    </div>
+
+    <script>
+        let industryData = {};
+
+        // Step 1: Load the data from JSON
+        fetch('data.json') // Replace this path with the correct path to your data.json file
+            .then(response => response.json())
+            .then(data => {
+                processIndustryData(data);
+                populateLargeCategory();
+                buildTreeView();
+            })
+            .catch(error => console.error('Error loading the JSON file:', error));
+
+        // Step 2: Process the raw data to handle multiple national economy codes
+        function processIndustryData(rawData) {
+            rawData.forEach(item => {
+                const largeCode = item["数字经济大类"];
+                const mediumCode = item["数字经济中类"];
+                const smallCode = item["数字经济小类"];
+
+                if (!industryData[largeCode]) {
+                    industryData[largeCode] = {
+                        name: item["数字经济大类名称"],
+                        digitalCode: largeCode,
+                        mediumCategories: {}
+                    };
+                }
+
+                if (!industryData[largeCode].mediumCategories[mediumCode]) {
+                    industryData[largeCode].mediumCategories[mediumCode] = {
+                        name: item["数字经济中类名称"],
+                        digitalCode: mediumCode,
+                        smallCategories: {}
+                    };
+                }
+
+                if (!industryData[largeCode].mediumCategories[mediumCode].smallCategories[smallCode]) {
+                    industryData[largeCode].mediumCategories[mediumCode].smallCategories[smallCode] = {
+                        name: item["数字经济小类名称"],
+                        description: item["说明"],
+                        digitalCode: smallCode,
+                        nationalCodes: []
+                    };
+                }
+
+                industryData[largeCode].mediumCategories[mediumCode].smallCategories[smallCode].nationalCodes.push({
+                    code: item["国民经济行业代码"],
+                    name: item["国民经济行业名称"]
+                });
+            });
+        }
+
+        // Step 3: Populate Large Category Dropdown
+        function populateLargeCategory() {
+            const largeSelect = document.getElementById("largeCategory");
+            largeSelect.innerHTML = '<option value="">请选择大类</option>';
+            for (const key in industryData) {
+                largeSelect.innerHTML += `<option value="${key}">${industryData[key].digitalCode} - ${industryData[key].name}</option>`;
+            }
+        }
+
+        // Step 4: Populate Medium Category Dropdown
+        function populateMediumCategory() {
+            const largeCategory = document.getElementById("largeCategory").value;
+            const mediumSelect = document.getElementById("mediumCategory");
+            mediumSelect.innerHTML = '<option value="">请选择中类</option>';
+
+            if (largeCategory && industryData[largeCategory]) {
+                const mediumCategories = industryData[largeCategory].mediumCategories;
+                for (const key in mediumCategories) {
+                    mediumSelect.innerHTML += `<option value="${key}">${mediumCategories[key].digitalCode} - ${mediumCategories[key].name}</option>`;
+                }
+            }
+        }
+
+        // Step 5: Populate Small Category Dropdown
+        function populateSmallCategory() {
+            const largeCategory = document.getElementById("largeCategory").value;
+            const mediumCategory = document.getElementById("mediumCategory").value;
+            const smallSelect = document.getElementById("smallCategory");
+            smallSelect.innerHTML = '<option value="">请选择小类</option>';
+
+            if (largeCategory && mediumCategory && industryData[largeCategory].mediumCategories[mediumCategory]) {
+                const smallCategories = industryData[largeCategory].mediumCategories[mediumCategory].smallCategories;
+                for (const key in smallCategories) {
+                    smallSelect.innerHTML += `<option value="${key}">${smallCategories[key].digitalCode} - ${smallCategories[key].name}</option>`;
+                }
+            }
+        }
+
+        // Step 6: Search and display the selected industry information, including multiple national economy codes
+        // 搜索功能中也要为国民经济行业代码生成链接
+        function searchIndustry() {
+            const largeCategory = document.getElementById("largeCategory").value;
+            const mediumCategory = document.getElementById("mediumCategory").value;
+            const smallCategory = document.getElementById("smallCategory").value;
+            const resultDiv = document.getElementById("result");
+
+            if (largeCategory && mediumCategory && smallCategory) {
+                const industry = industryData[largeCategory].mediumCategories[mediumCategory].smallCategories[smallCategory];
+                let nationalCodesList = '<ul>';
+                // 这里使用和树状结构相同的逻辑生成外部链接
+                industry.nationalCodes.forEach(nationalCode => {
+                    nationalCodesList += `
+                        <li>
+                            <a href="http://tjcx.scimall.org/#:~:text=${encodeURIComponent(nationalCode.code)}" target="_blank">
+                                <span class="code-badge">${nationalCode.code}</span> ${nationalCode.name}
+                            </a>
+                        </li>`;
+                });
+                nationalCodesList += '</ul>';
+
+                resultDiv.innerHTML = `
+                    <p><strong>小类名称：</strong> ${industry.name}</p>
+                    <p><strong>数字经济代码：</strong> <span class="digital-economy-code">${industry.digitalCode}</span></p>
+                    <p><strong>描述：</strong> ${industry.description}</p>
+                    <p><strong>国民经济代码：</strong> ${nationalCodesList}</p>
+                `;
+            } else {
+                resultDiv.innerHTML = "<p>请完整选择大类、中类和小类进行查询。</p>";
+            }
+        }
+
+
+        // Step 7: Build Tree View with collapsible functionality for all levels
+       // 原来的折叠部分改成这样
+        // 修改后的折叠部分代码，格式为 【代码】：名称
+        // 修改后的折叠部分代码，格式为 【代码】：名称，并在点击时显示对应信息
+        // 修改后的折叠功能和小类问号图标悬停提示
+        function buildTreeView() {
+    const tree = document.getElementById('industryTree');
+    for (const largeKey in industryData) {
+        const largeItem = industryData[largeKey];
+        const largeNode = document.createElement('li');
+        // 使用 Font Awesome 图标代替 + 和 - 号
+        largeNode.innerHTML = `<i class="fas fa-folder toggle"></i> 【${largeKey}】：${largeItem.name}`;
+
+        const mediumList = document.createElement('ul');
+        mediumList.style.display = 'none'; // 初始隐藏
+
+        for (const mediumKey in largeItem.mediumCategories) {
+            const mediumItem = largeItem.mediumCategories[mediumKey];
+            const mediumNode = document.createElement('li');
+            mediumNode.innerHTML = `<i class="fas fa-folder toggle"></i> 【${mediumKey}】：${mediumItem.name}`;
+
+            const smallList = document.createElement('ul');
+            smallList.style.display = 'none'; // 初始隐藏
+
+            for (const smallKey in mediumItem.smallCategories) {
+                const smallItem = mediumItem.smallCategories[smallKey];
+                const smallNode = document.createElement('li');
+                // 为小类添加问号图标和悬停显示说明
+                smallNode.innerHTML = `【${smallKey}】：${smallItem.name}
+                    <i class="fas fa-question-circle info-icon" title="${smallItem.description || '无描述'}"></i>`;
+
+                smallNode.onclick = function (e) {
+                    e.stopPropagation(); // 阻止事件冒泡，避免点击小类时影响父类折叠
+                    displayResult(smallItem, smallKey); // 显示点击的节点信息
+                };
+                smallList.appendChild(smallNode);
+            }
+
+            mediumNode.appendChild(smallList);
+            mediumList.appendChild(mediumNode);
+
+            // 点击事件，展开/折叠中类及其下的子节点，并改变图标
+            mediumNode.querySelector('.toggle').addEventListener('click', function() {
+                const isExpanded = smallList.style.display === 'block';
+                smallList.style.display = isExpanded ? 'none' : 'block';
+                this.classList.toggle('fa-folder-open'); // 切换图标
+            });
+        }
+
+        largeNode.appendChild(mediumList);
+        tree.appendChild(largeNode);
+
+        // 点击事件，展开/折叠大类及其下的子节点，并改变图标
+        largeNode.querySelector('.toggle').addEventListener('click', function() {
+            const isExpanded = mediumList.style.display === 'block';
+            mediumList.style.display = isExpanded ? 'none' : 'block';
+            this.classList.toggle('fa-folder-open'); // 切换图标
+        });
+    }
+}
+
+
+        // 显示节点点击后的小类信息
+        // function displayResult(item, smallKey) {
+        //     const resultDiv = document.getElementById('result'); // 获取结果显示区域
+        //     // 构建结果展示内容
+        //     resultDiv.innerHTML = `
+        //         <p><strong>小类名称：</strong> ${item.name}</p>
+        //         <p><strong>数字经济代码：</strong> ${smallKey}</p>
+        //         <p><strong>描述：</strong> ${item.description ? item.description : '无'}</p>
+        //         <p><strong>国民经济代码：</strong>
+        //             <ul>
+        //                 ${item.nationalCodes && item.nationalCodes.length > 0
+        //                     ? item.nationalCodes.map(codeObj => `<li>${codeObj.code} - ${codeObj.name}</li>`).join('')
+        //                     : '无'}
+        //             </ul>
+        //         </p>
+        //     `;
+        // }
+
+        // 显示节点点击后的小类信息，并带有直接定位到外部页面的功能
+        function displayResult(item, smallKey) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <p><strong>小类名称：</strong> ${item.name}</p>
+                <p><strong>数字经济代码：</strong> ${smallKey}</p>
+                <p><strong>描述：</strong> ${item.description || '无描述'}</p>
+                <p><strong>国民经济代码：</strong>
+                    <ul>
+                        ${item.nationalCodes && item.nationalCodes.length > 0
+                            ? item.nationalCodes.map(codeObj => `
+                                <li>
+                                    <a href="http://tjcx.scimall.org/#:~:text=${encodeURIComponent(codeObj.code)}" target="_blank">
+                                        <span class="code-badge">${codeObj.code}</span> ${codeObj.name}
+                                    </a>
+                                </li>
+                            `).join('')
+                            : '无'}
+                    </ul>
+                </p>
+            `;
+        }
+
+
+
+        // 创建树节点的函数
+        function createNode(name, hasChildren) {
+            const node = document.createElement('li');
+            node.innerHTML = name;
+            if (hasChildren) {
+                node.classList.add('parent'); // 标记为父节点
+            } else {
+                node.classList.add('leaf'); // 标记为叶子节点
+            }
+            return node;
+        }
+
+        buildTreeView();
+
+
+        // 搜索过滤功能
+        function filterTree() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const items = document.querySelectorAll('#industryTree li');
+
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(input)) {
+                    item.style.display = '';
+                    let parent = item.parentElement.closest('li');
+                    while (parent) {
+                        parent.style.display = '';
+                        parent.classList.add('open');
+                        parent = parent.parentElement.closest('li');
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // 重置搜索功能
+        function resetSearch() {
+            document.getElementById('searchInput').value = ''; // 清空搜索框
+            const items = document.querySelectorAll('#industryTree li');
+            items.forEach(item => {
+                item.style.display = ''; // 恢复所有隐藏的项目
+                item.classList.remove('open'); // 折叠所有项目
+            });
+        }
+
+
+        // Helper function to create a tree node
+        function createNode(name, hasChildren = true) {
+            const node = document.createElement('li');
+            node.innerHTML = name;
+            if (!hasChildren) {
+                node.style.cursor = 'default';
+                node.style.position = 'relative';
+                node.style.marginLeft = '15px';
+            }
+            return node;
+        }
+
+        buildTreeView();
+    </script>
+</body>
+</html>
