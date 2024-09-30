@@ -106,9 +106,14 @@
             padding: 10px 0;
         }
         .logo {
-            max-width: 500px;
+            max-width: 300px;
             /* 您可以根据需要调整logo大小 */
         }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+
         .info-icon:hover {
             color: #0056b3; /* 悬停时颜色变化 */
     }
@@ -404,27 +409,59 @@
 
             items.forEach(item => {
                 const text = item.textContent.toLowerCase();
+                const regex = new RegExp(`(${input})`, 'gi');
+
                 if (text.includes(input)) {
+                    // 显示匹配的项目
                     item.style.display = '';
+
+                    // 在匹配文本中高亮关键字
+                    item.innerHTML = item.textContent.replace(regex, '<span class="highlight" style="background-color: yellow;">$1</span>');
+
+                    // 确保父项也是可见的，并展开父级列表
                     let parent = item.parentElement.closest('li');
                     while (parent) {
                         parent.style.display = '';
-                        parent.classList.add('open');
+                        parent.classList.add('open'); // 自动展开包含匹配项的父节点
+                        const childUl = parent.querySelector('ul');
+                        if (childUl) {
+                            childUl.style.display = 'block'; // 展开父节点的子节点
+                        }
                         parent = parent.parentElement.closest('li');
                     }
                 } else {
+                    // 隐藏不匹配的项目
                     item.style.display = 'none';
                 }
             });
         }
 
+
         // 重置搜索功能
-        function resetSearch() {
-            document.getElementById('searchInput').value = ''; // 清空搜索框
+      function resetSearch() {
+    // 清空搜索框
+            document.getElementById('searchInput').value = '';
+
+            // 获取所有的树节点
             const items = document.querySelectorAll('#industryTree li');
+
+            // 恢复所有节点的显示状态和默认折叠状态
             items.forEach(item => {
-                item.style.display = ''; // 恢复所有隐藏的项目
-                item.classList.remove('open'); // 折叠所有项目
+                item.style.display = ''; // 显示所有节点
+                item.classList.remove('open'); // 关闭所有节点
+
+                // 折叠子节点
+                const childUl = item.querySelector('ul');
+                if (childUl) {
+                    childUl.style.display = 'none'; // 折叠子节点
+                }
+
+                // 清除高亮
+                const highlightedText = item.querySelectorAll('.highlight');
+                highlightedText.forEach(el => {
+                    el.classList.remove('highlight');
+                    el.style.backgroundColor = ''; // 清除高亮背景色
+                });
             });
         }
 
