@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数字经济行业代码查询</title>
+    <title>生产性服务业行业代码查询</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -117,7 +117,7 @@
         .info-icon:hover {
             color: #0056b3; /* 悬停时颜色变化 */
     }
-    .button {
+        .button {
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
@@ -133,13 +133,12 @@
             max-width: 200px; /* 最大宽度 */
         }
 
-
     </style>
 </head>
 <body>
-    <button class="button" onclick="switchToServiceCode()">切换到生产性服务业代码查询</button>
+    <button class="button" onclick="switchToServiceCode()">切换到数字经济代码查询</button>
     <div class="container">
-        <h1>数字经济行业代码查询</h1>
+        <h1>生产性服务行业代码查询</h1>
          <!-- 在这里添加公司 logo -->
         <img src="img/微信图片_20240929201410.png" alt="江苏博和利" class="logo">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
@@ -164,7 +163,7 @@
             </select>
 
             <button onclick="searchIndustry()">查询</button>
-            <button class="button" onclick="switchToServiceCode()">切换到生产性服务业代码查询</button>
+
         </div>
 
         <div class="result" id="result">
@@ -177,17 +176,15 @@
     </div>
 
     <script>
-         function switchToServiceCode() {
+        function switchToServiceCode() {
         // 跳转到 index2.html
-        window.location.href = 'index2.html';
+        window.location.href = 'index.html';
     }
-
-
 
         let industryData = {};
 
         // Step 1: Load the data from JSON
-        fetch('data.json') // Replace this path with the correct path to your data.json file
+        fetch('data3.json') // Replace this path with the correct path to your data.json file
             .then(response => response.json())
             .then(data => {
                 processIndustryData(data);
@@ -199,13 +196,13 @@
         // Step 2: Process the raw data to handle multiple national economy codes
         function processIndustryData(rawData) {
             rawData.forEach(item => {
-                const largeCode = item["数字经济大类"];
-                const mediumCode = item["数字经济中类"];
-                const smallCode = item["数字经济小类"];
+                const largeCode = item["生产性服务业大类"];
+                const mediumCode = item["生产性服务业中类"];
+                const smallCode = item["生产性服务业小类"];
 
                 if (!industryData[largeCode]) {
                     industryData[largeCode] = {
-                        name: item["数字经济大类名称"],
+                        name: item["生产性服务业大类名称"],
                         digitalCode: largeCode,
                         mediumCategories: {}
                     };
@@ -213,7 +210,7 @@
 
                 if (!industryData[largeCode].mediumCategories[mediumCode]) {
                     industryData[largeCode].mediumCategories[mediumCode] = {
-                        name: item["数字经济中类名称"],
+                        name: item["生产性服务业中类名称"],
                         digitalCode: mediumCode,
                         smallCategories: {}
                     };
@@ -221,7 +218,7 @@
 
                 if (!industryData[largeCode].mediumCategories[mediumCode].smallCategories[smallCode]) {
                     industryData[largeCode].mediumCategories[mediumCode].smallCategories[smallCode] = {
-                        name: item["数字经济小类名称"],
+                        name: item["生产性服务业小类名称"],
                         description: item["说明"],
                         digitalCode: smallCode,
                         nationalCodes: []
@@ -230,7 +227,7 @@
 
                 industryData[largeCode].mediumCategories[mediumCode].smallCategories[smallCode].nationalCodes.push({
                     code: item["国民经济行业代码"],
-                    name: item["国民经济行业名称"]
+
                 });
             });
         }
@@ -297,8 +294,8 @@
 
                 resultDiv.innerHTML = `
                     <p><strong>小类名称：</strong> ${industry.name}</p>
-                    <p><strong>数字经济代码：</strong> <span class="digital-economy-code">${industry.digitalCode}</span></p>
-                    <p><strong>描述：</strong> ${industry.description}</p>
+                    <p><strong>生产性服务业代码：</strong> <span class="digital-economy-code">${industry.digitalCode}</span></p>
+                    <p><strong>生产性服务业描述：</strong> ${industry.description}</p>
                     <p><strong>国民经济代码：</strong> ${nationalCodesList}</p>
                 `;
             } else {
@@ -388,27 +385,27 @@
         // }
 
         // 显示节点点击后的小类信息，并带有直接定位到外部页面的功能
-        function displayResult(item, smallKey) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = `
-                <p><strong>小类名称：</strong> ${item.name}</p>
-                <p><strong>数字经济代码：</strong> ${smallKey}</p>
-                <p><strong>描述：</strong> ${item.description || '无描述'}</p>
-                <p><strong>国民经济代码：</strong>
-                    <ul>
-                        ${item.nationalCodes && item.nationalCodes.length > 0
-                            ? item.nationalCodes.map(codeObj => `
-                                <li>
-                                    <a href="http://tjcx.scimall.org/#:~:text=${encodeURIComponent(codeObj.code)}" target="_blank">
-                                        <span class="code-badge">${codeObj.code}</span> ${codeObj.name}
-                                    </a>
-                                </li>
-                            `).join('')
-                            : '无'}
-                    </ul>
-                </p>
-            `;
-        }
+       function displayResult(item, smallKey) {
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = `
+        <p><strong>小类名称：</strong> ${item.name}</p>
+        <p><strong>数字经济代码：</strong> ${smallKey}</p>
+        <p><strong>描述：</strong> ${item.description || '无描述'}</p>
+        <p><strong>国民经济代码：</strong>
+            <ul>
+                ${item.nationalCodes && item.nationalCodes.length > 0
+                    ? item.nationalCodes.map(codeObj => `
+                        <li>
+                            <a href="http://tjcx.scimall.org/#:~:text=${encodeURIComponent(codeObj.code)}" target="_blank">
+                                <span class="code-badge">${codeObj.code}</span> ${ 'null'}
+                            </a>
+                        </li>
+                    `).join('')
+                    : '无'}
+            </ul>
+        </p>
+    `;
+}
 
 
 
